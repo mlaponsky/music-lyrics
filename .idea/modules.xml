@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/common/common.iml" filepath="$PROJECT_DIR$/common/common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lyrics-etl/lyrics-etl.iml" filepath="$PROJECT_DIR$/lyrics-etl/lyrics-etl.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lyrics-scraper/lyrics-scraper.iml" filepath="$PROJECT_DIR$/lyrics-scraper/lyrics-scraper.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/music-lyrics.iml" filepath="$PROJECT_DIR$/.idea/music-lyrics.iml" />
+    </modules>
+  </component>
+</project>
