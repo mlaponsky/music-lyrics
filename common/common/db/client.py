@@ -1,12 +1,12 @@
-from typing import Dict, Any
-
+ 
+from typing import Dict, Iterable
 from arango.client import ArangoClient
 from arango.database import StandardDatabase
 from arango.exceptions import ServerConnectionError
 from common.db.config import ArangoConfig, ArangoCredentials
 import logging
 
-from db.exception import ArangoConnectionError
+from common.db.exception import ArangoConnectionError
 
 logger = logging.getLogger()
 SYSTEM_DB = "_system"
@@ -43,3 +43,7 @@ class ArangoConnectionClient(object):
         except ServerConnectionError:
             initialize_db(client=client, config=config)
             return cls.build(config=config)
+        
+
+    def add_documents(document: Iterable[Dict]) -> None:
+        return
