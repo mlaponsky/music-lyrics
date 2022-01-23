@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from scrapy import Selector
-from scrapy.http import Response
+from scrapy.http import TextResponse
 from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
 
@@ -64,7 +64,7 @@ class OhhlaSpider(CrawlSpider):
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         self.logger.info(f"Output dir = {output_dir}.")
 
-    def download_lyrics(self, response: Response):
+    def download_lyrics(self, response: TextResponse):
         # self.logger.info(f"Downloading {response.url}")
         download_location: str = response.url.split("anonymous")[-1].strip("/")
         fpath = Path(self._output_dir, download_location)
@@ -81,7 +81,7 @@ class OhhlaSpider(CrawlSpider):
         return
 
     @staticmethod
-    def _get_lyrics_text(response: Response) -> str:
+    def _get_lyrics_text(response: TextResponse) -> str:
         selectors: List[Selector] = response.xpath("//pre")
         if not selectors:
             try:
@@ -91,4 +91,4 @@ class OhhlaSpider(CrawlSpider):
         elif len(selectors) > 1:
             raise OhhlaException(f"Skipping {response.url}; non-conformant for a song page.")
         else:
-            return response.xpath("//pre")[0].root.text
+            return response.xpath("//pre").get().root.text

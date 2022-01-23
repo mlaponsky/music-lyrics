@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List, Iterable
+from typing import Dict, Optional, Iterable
 import re
 import os
 

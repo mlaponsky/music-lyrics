@@ -1,0 +1,8 @@
+{
+  "model": {
+    "type": "word2vec",
+    "params": {
+      "sg": 1
+    }
+  }
+}

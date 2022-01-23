@@ -1,13 +1,10 @@
 import json
-import os
-from typing import Iterator, IO, Iterable
+from typing import Iterator, IO, Iterable, Optional, List
 import logging
-import sys
-sys.path.append("/Users/maxlaponsky/Projects/music-lyrics/lyrics-etl")
+from common.model import Song
 from lyrics.ohhla import OhhlaRegex
-from lyrics.ohhla.model import Song
-from lyrics.utils import strip_match, get_files
-
+from lyrics.utils import strip_match
+import uuid
 
 logger = logging.getLogger()
 
@@ -50,8 +47,9 @@ class OhhlaParser(object):
               exceptions_file: IO) -> None:
         song: Song = self._parse_page(infile)
         if not all(song.__dict__.values()):
-            logger.warning(f"Failed for {song.path}.")
-            exceptions_file.write(f"{song.path}\n")
+            filepath: str = f"{song.album_label}/{song.album_label}/{song.title_label}"
+            logger.warning(f"Failed for {filepath}.")
+            exceptions_file.write(f"{filepath}\n")
             self._failure += 1
         else:
             results_file.write(f"{json.dumps(song.__dict__)}\n")
@@ -59,34 +57,43 @@ class OhhlaParser(object):
         return
 
     def _parse_page(self, filepath: str) -> Song:
-        path: str = "/".join(filepath.split("/")[-3:])
-        song: Song = Song(path=path)
+        artist_label, album_label, title_label = filepath.split("/")[-3:]
+        title: Optional[str] = None
+        album: Optional[str] = None
+        artist: Optional[str] = None
+        lyrics: List[str] = []
         try:
             lines: Iterator[str] = _open_page(filepath)
             for _ in range(4):
                 line = next(lines)
-                self._fill_title(line, song)
-                self._fill_album(line, song)
-                self._fill_artist(line, song)
-            song.lyrics = list(lines)
-            return song
+                title = self._fill_title(line, title)
+                album = self._fill_album(line, album)
+                artist = self._fill_artist(line, artist)
+            lyrics = list(lines)
         except StopIteration:
-            return song
+            pass
+        return Song(artist_label=artist_label,
+                    album_label=album_label,
+                    title_label=title_label,
+                    artist=artist,
+                    album=album,
+                    title=title,
+                    lyrics=lyrics)
 
-    def _fill_title(self, line: str, song: Song) -> None:
-        if not song.title:
-            song.title = strip_match(line, self._patterns_map.song)
-        return
+    def _fill_title(self, line: str, title: Optional[str]) -> Optional[str]:
+        if not title:
+            title = strip_match(line, self._patterns_map.song)
+        return title
 
-    def _fill_artist(self, line: str, song: Song) -> None:
-        if not song.artist:
-            song.artist = strip_match(line, self._patterns_map.artist)
-        return
+    def _fill_artist(self, line: str, artist: Optional[str]) -> Optional[str]:
+        if not artist:
+            artist = strip_match(line, self._patterns_map.artist)
+        return artist
 
-    def _fill_album(self, line: str, song: Song) -> None:
-        if not song.album:
-            song.album = strip_match(line, self._patterns_map.album)
-        return
+    def _fill_album(self, line: str, album: Optional[str]) -> Optional[str]:
+        if not album:
+            album = strip_match(line, self._patterns_map.album)
+        return album
 
 
 def _open_page(filepath: str) -> Iterator[str]:
@@ -95,15 +102,3 @@ def _open_page(filepath: str) -> Iterator[str]:
             cleaned_line = line.strip()
             if cleaned_line:
                 yield cleaned_line
-
-
-if __name__ == "__main__":
-    base_dir = "/Users/maxlaponsky/Projects/music-lyrics/"
-    ROOT_DIR = os.path.join(base_dir, "lyrics-scraper/lyrics/data")
-    outfile_path: str = os.path.join(base_dir, "lyrics-etl/target/songs.jsonl")
-    exceptions_path: str = os.path.join(base_dir, "lyrics-etl/target/exceptions.jsonl")
-    input_files: Iterable[str] = get_files(ROOT_DIR)
-    parser = OhhlaParser.build(outfile_path, exceptions_path)
-    parser.extract(input_files)
-    print("===== LYRICS EXTRACTION COMPLETE =====")
-    print(str(parser))
